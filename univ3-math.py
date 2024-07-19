@@ -25,7 +25,7 @@ def price_to_sqrtP(p):
 # that is, it must be proportional to the current proportion of the reserves and this is why the two L's can be different - when the proportion is not preserved
 # and we pick the small L to reestablish the proportion
 
-sqprtp_low = price_to_sqrtP(4545)
+sqrtp_low = price_to_sqrtP(4545)
 sqrtp_curr = price_to_sqrtP(5000)
 sqrtp_upp = price_to_sqrtP(5500)
 
@@ -54,7 +54,28 @@ amount_eth = 1 * eth
 amount_usdc = 5000 * eth
 
 liq0 = liquidity0(amount_eth, sqrtp_curr, sqrtp_upp)
-liq1 = liquidity1(amount_usdc, sqrtp_curr, sqprtp_low)
+liq1 = liquidity1(amount_usdc, sqrtp_curr, sqrtp_low)
 liq = int(min(liq0, liq1))
 
 print(liq)
+
+# token amounts calcultion again
+# since we choose the amounts we're going to deposit, the amounts can be wrong
+# we cannot deposit at any price range; the liquidity amount needs to be distributed evenly along the curve of the price range we're depositing into
+# Thus we even though users choose amounts, needs to re-calculate them, and actual amounts will be slightly differenrt
+
+def calc_amount0(liq, pa, pb):
+    if pa > pb:
+        pa, pb = pb, pa
+
+    return int(liq * q96 * (pb - pa)/(pa * pb))
+
+def calc_amount1(liq, pa, pb):
+    if pa > pb:
+        pa, pb = pb, pa
+    
+    return int(liq * (pb - pa)/q96)
+
+amount0 = calc_amount0(liq, sqrtp_upp, sqrtp_curr)
+amount1 = calc_amount1(liq, sqrtp_low, sqrtp_curr)
+print(amount0, amount1)
