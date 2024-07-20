@@ -103,3 +103,26 @@ amount_out = calc_amount0(liq, price_next, sqrtp_curr)
 
 print("USDC in:", amount_in / eth)
 print("ETH out:", amount_out / eth)
+
+
+# output amount calculation when selling eth (that is: selling token x)
+# need to find the target price when selling token x (ETH in our case) and buying token y (USDC in this case)
+# change x = change (1/sqrt P) * L
+# from this we can find the target price
+# sqrt(P target) = (sqrt(P) * L) / (change x * sqrt(P) + L)
+# knowing target price, we can find the output amount 
+
+# swap eth for usdc
+amount_in = 0.01337 * eth
+print(f"\nSelling {amount_in/eth} ETH")
+
+price_next = int((liq * q96 * sqrtp_curr) // (liq * q96 + amount_in * sqrtp_curr))
+print("New price:", (price_next / q96) ** 2)
+print("New sqrtP:", price_next)
+print("New tick:", price_to_tick((price_next / q96) ** 2))
+
+amount_in = calc_amount0(liq, price_next, sqrtp_curr)
+amount_out = calc_amount1(liq, price_next, sqrtp_curr)
+
+print("ETH in:", amount_in / eth)
+print("USDC out:", amount_out / eth)
