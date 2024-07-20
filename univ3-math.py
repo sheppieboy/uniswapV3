@@ -79,3 +79,27 @@ def calc_amount1(liq, pa, pb):
 amount0 = calc_amount0(liq, sqrtp_upp, sqrtp_curr)
 amount1 = calc_amount1(liq, sqrtp_low, sqrtp_curr)
 print(amount0, amount1)
+
+#calculate the target swap price
+# remember: in V3 we choose the price we want our trade to lead to i.e. swapping changes the current price - moves the price along the curve
+# formula: L = change y / change sqrt P
+# so change sqrt P = change y / L
+
+# Lets calculate the target price for a usdc swap of 42 tokens i.e. 42 dollars to ether
+
+amount_in = 42 * eth
+price_diff = (amount_in * q96) // liq
+price_next = sqrtp_curr + price_diff
+print("New price:", (price_next / q96) ** 2)
+print("New sqrtP:", price_next)
+print("New tick:", price_to_tick((price_next / q96) ** 2))
+
+#after finding the target price we can calculate token amounts using the amounts calculation functions
+# x = L(sqrt(Pb) - sqrt(Pa)) / (sqrt(Pb)*sqrt(Pa))
+# y = L(sqrt(Pb) - sqrt(Pa))
+
+amount_in = calc_amount1(liq, price_next, sqrtp_curr)
+amount_out = calc_amount0(liq, price_next, sqrtp_curr)
+
+print("USDC in:", amount_in / eth)
+print("ETH out:", amount_out / eth)
