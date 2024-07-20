@@ -1,15 +1,20 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.14;
 import {Position} from "./lib/Position.sol";
 import {Tick} from "./lib/Tick.sol";
+import {IUniswapV3MintCallback} from "./interfaces/IUniswapV3MintCallback.sol";
+import {IERC20} from "./interfaces/IERC20.sol";
 
 error InvalidTickRange();
 error ZeroLiquidity();
+error InsufficientInputAmount();
 
 contract UniswapV3Pool {
     using Tick for mapping(int24 => Tick.Info);
     using Position for mapping (bytes32 => Position.Info);
     using Position for Position.Info;
+
+    event Mint(address sender, address indexed owner, int24 indexed tickLower, int24 indexed tickUpper, uint128 amount, uint256 amount0, uint256 amoun1);
 
     int24 internal constant MIN_TICK = -887272;
     int24 internal constant MAX_TICK = -MIN_TICK;
@@ -46,7 +51,7 @@ contract UniswapV3Pool {
     //take owners address, to track the owner of liquidity
     //upper and lower ticks, to set the bounds of a price range
     //the amount of liquidity we want to provide
-    function mint(address owner, int24 lowerTick, int24 upperTick, uint128 amount) external returns (uint256 amount0, uint256 amount1) {
+    function mint(address owner, int24 lowerTick, int24 upperTick, uint128 amount, bytes calldata data) external returns (uint256 amount0, uint256 amount1) {
         
         /* outline of how minting works:
         1. a user specifies a price range and an amount of liquidity
@@ -76,10 +81,12 @@ contract UniswapV3Pool {
         if (amount0 > 0) balance0Before = balance0();
         if (amount1 > 0) balance1Before = balance1();
 
-        IUniswapV3MintCallback(msg.sender).uniswapV3MintCallback(amount0, amount1);
+        IUniswapV3MintCallback(msg.sender).uniswapV3MintCallback(amount0, amount1, data);
 
         if (amount0 > 0 && balance0Before + amount0 > balance0()) revert InsufficientInputAmount();
         if (amount1 > 0 && balance1Before + amount1 > balance1()) revert InsufficientInputAmount();
+
+        emit Mint(msg.sender, owner, lowerTick, upperTick, amount, amount0, amount1);
 
     }
 
