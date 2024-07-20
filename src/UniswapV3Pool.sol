@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: Unlicensed
 pragma solidity ^0.8.14;
+
 import {Position} from "./lib/Position.sol";
 import {Tick} from "./lib/Tick.sol";
 import {IUniswapV3MintCallback} from "./interfaces/IUniswapV3MintCallback.sol";
+import {IUniswapV3SwapCallback} from "./interfaces/IUniswapV3SwapCallback.sol";
 import {IERC20} from "./interfaces/IERC20.sol";
 
 error InvalidTickRange();
@@ -109,8 +111,9 @@ contract UniswapV3Pool {
 
         //caller transfer input amount
         uint256 balance1Before = balance1();
-        IUniswapV3MintCallback(msg.sender).uniswapV3MintCallback(amount0, amount1, data);
-
+        
+        IUniswapV3SwapCallback(msg.sender).uniswapV3SwapCallback(amount0, amount1, data);
+        
         if (balance1Before + uint256(amount1) < balance1()) revert InsufficientInputAmount();
 
         emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, liquidity, slot0.tick);
