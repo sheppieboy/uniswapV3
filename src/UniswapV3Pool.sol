@@ -3,15 +3,17 @@ pragma solidity ^0.8.14;
 
 import {Position} from "./lib/Position.sol";
 import {Tick} from "./lib/Tick.sol";
+
 import {IUniswapV3MintCallback} from "./interfaces/IUniswapV3MintCallback.sol";
 import {IUniswapV3SwapCallback} from "./interfaces/IUniswapV3SwapCallback.sol";
 import {IERC20} from "./interfaces/IERC20.sol";
+import {IUniswapV3Pool} from "./interfaces/IUniswapV3Pool.sol";
 
 error InvalidTickRange();
 error ZeroLiquidity();
 error InsufficientInputAmount();
 
-contract UniswapV3Pool {
+contract UniswapV3Pool is IUniswapV3Pool {
     using Tick for mapping(int24 => Tick.Info);
     using Position for mapping (bytes32 => Position.Info);
     using Position for Position.Info;
@@ -116,7 +118,7 @@ contract UniswapV3Pool {
         
         if (balance1Before + uint256(amount1) < balance1()) revert InsufficientInputAmount();
 
-        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, liquidity, slot0.tick);
+        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, uint128(liquidity), slot0.tick);
     }
 
     /*
