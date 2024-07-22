@@ -69,14 +69,23 @@ contract UniswapV3Pool is IUniswapV3Pool {
 
         if (amount == 0) revert ZeroLiquidity();
 
-        ticks.update(lowerTick, amount);
-        ticks.update(upperTick, amount); 
+        bool flippedLower = ticks.update(lowerTick, amount);
+        bool flippedUpper = ticks.update(upperTick, amount); 
+
+        if (flippedLower){
+            tickBitmap.flipTick(lowerTick, 1); // 1 for now
+        }
+        if (flippedUpper) {
+            tickBitmap.flipTick(upperTick, 1);
+        }
+
         Position.Info storage position = positions.get(owner, lowerTick, upperTick);
         position.update(amount);
 
-        //HARDCODED FOR NOW
-        amount0 = 0.998976618347425280 ether;
-        amount1 = 5000 ether;
+        Slot0 memory _slot0 = slot0;
+
+        amount0 = Math.calcAmount0Delta(_slot0.sqrtPriceX96, TickMath.getSqrtRatioAtTick(upperTick), amount);
+        amount1 = Math.calcAmount1Delta(_slot0.sqrtPriceX96, TickMath.getSqrtRatioAtTick(lowerTick), amount);
 
         liquidity += uint256(amount);
 
@@ -118,7 +127,7 @@ contract UniswapV3Pool is IUniswapV3Pool {
         
         if (balance1Before + uint256(amount1) < balance1()) revert InsufficientInputAmount();
 
-        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, uint128(liquidity), slot0.tick);
+        emit Swap(msg.sender, recipient, amount0, amount1, slot0.sqrtPriceX96, liquidity, slot0.tick);
     }
 
     /*

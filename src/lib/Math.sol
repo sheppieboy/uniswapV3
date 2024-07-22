@@ -10,7 +10,7 @@ library Math {
 
         require(sqrtPriceAX96 > 0);
 
-        amount0 = divRoundUp(mulDivRoundingUp((uint256(liquidity) << FixedPoint96.RESOLUTION),(sqrtPriceBX96 - sqrtPriceAX96),sqrtPriceBX96),sqrtPriceAX96);
+        amount0 = divRoundingUp(mulDivRoundingUp((uint256(liquidity) << FixedPoint96.RESOLUTION),(sqrtPriceBX96 - sqrtPriceAX96),sqrtPriceBX96),sqrtPriceAX96);
     }
 
     function calcAmount1Delta(uint160 sqrtPriceAX96, uint160 sqrtPriceBX96, uint128 liquidity) internal pure returns (uint256 amount1){
@@ -26,6 +26,12 @@ library Math {
         if(mulmod(a, b, denominator) > 0){
             require(result < type(uint256).max);
             result ++;
+        }
+    }
+
+    function divRoundingUp(uint256 numerator, uint256 denominator) internal pure returns(uint256 result){
+        assembly {
+            result := add(div(numerator, denominator), gt(mod(numerator, denominator)), 0)
         }
     }
 }
